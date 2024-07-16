@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Map with Login</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <style>
+        html, body {width: 100%; height: 100%; margin: 0; padding: 0;}
+        #map {position: absolute; top: 0; bottom: 0; right: 0; left: 0;}
+        .leaflet-container {font-size: 1rem;}
+    </style>
+</head>
+<body>
+    <!-- Map Container -->
+    <div id="map"></div>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel">Login</h5>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm" autocomplete="off">
+                        <div class="mb-3">
+                            <label for="apikey" class="form-label">API Key</label>
+                            <input type="text" class="form-control" id="apikey" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+
+    <script>
+        let map;
+        let marker;
+        let pathLayer;
+
+        $(document).ready(function() {
+            // Show the login modal
+            var loginModal = new bootstrap.Modal(document.getElementById('loginModal'), {
+                backdrop: 'static',
+                keyboard: false
+            });
+            loginModal.show();
+
+            // Handle form submission
+            $('#loginForm').on('submit', function(event) {
+                event.preventDefault();
+                var apikey = $('#apikey').val();
+                loginModal.hide();
+                initializeMap(apikey);
+            });
+        });
+
+        function initializeMap(key) {
+            map = L.map('map', {
+                center: [37.5830426, 127.0585864],
+                crs: L.CRS.EPSG3857,
+                zoom: 11,
+                zoomControl: true,
+                preferCanvas: false,
+            });
+
+            var tile_layer_5550952b9891e7da11705edd551d6f68 = L.tileLayer(
+                "https://api.vworld.kr/req/wmts/1.0.0/" + key + "/Satellite/{z}/{y}/{x}.jpeg",
+                {"attribution": "VWorld", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            ).addTo(map);
+
+            var tile_layer_6006df8ca80530a3dbcc43e0bc58dd68 = L.tileLayer(
+                "https://api.vworld.kr/req/wmts/1.0.0/" + key + "/Hybrid/{z}/{y}/{x}.png",
+                {"attribution": "VWorld", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            );
+
+            var tile_layer_3f5e84e64fe7cda238e74046bc54654c = L.tileLayer(
+                "https://api.vworld.kr/req/wmts/1.0.0/" + key + "/Base/{z}/{y}/{x}.png",
+                {"attribution": "VWorld", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            );
+
+            var tile_layer_5d7b7fd7b91179a7ad4705b6053815e6 = L.tileLayer(
+                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {"attribution": "Data by &copy; <a target=\"_blank\" href=\"http://openstreetmap.org\">OpenStreetMap</a>, under <a target=\"_blank\" href=\"http://www.openstreetmap.org/copyright\">ODbL</a>.", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            );
+
+            pathLayer = L.polyline([
+                [37.5830426, 127.0585864],
+                [37.5820426, 127.0575864]
+            ], {color: 'blue'});
+
+            var layer_control_07451ef053b36ebfdbb6bc9515c4d6d3 = {
+                base_layers: {
+                    "VWorld Satellite": tile_layer_5550952b9891e7da11705edd551d6f68,
+                    "VWorld Base": tile_layer_3f5e84e64fe7cda238e74046bc54654c,
+                    "openstreetmap": tile_layer_5d7b7fd7b91179a7ad4705b6053815e6,
+                },
+                overlays: {
+                    "VWorld Hybrid": tile_layer_6006df8ca80530a3dbcc43e0bc58dd68,
+                    "Path": pathLayer
+                },
+            };
+
+            L.control.layers(
+                layer_control_07451ef053b36ebfdbb6bc9515c4d6d3.base_layers,
+                layer_control_07451ef053b36ebfdbb6bc9515c4d6d3.overlays,
+                {"autoZIndex": true, "collapsed": true, "position": "topright"}
+            ).addTo(map);
+
+            tile_layer_5d7b7fd7b91179a7ad4705b6053815e6.remove();
+            tile_layer_6006df8ca80530a3dbcc43e0bc58dd68.remove();
+            tile_layer_3f5e84e64fe7cda238e74046bc54654c.remove();
+
+            // Function to add or move a marker on the map
+            function addOrMoveMarker(lat, lng) {
+                if (marker) {
+                    marker.setLatLng([lat, lng]);
+                } else {
+                    marker = L.marker([lat, lng], {icon: L.AwesomeMarkers.icon({"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "blue", "prefix": "glyphicon"})}).addTo(map);
+                }
+                map.setView([lat, lng], map.getZoom());
+            }
+
+            map.on('click', function(e) {
+                var lat = e.latlng.lat;
+                var lng = e.latlng.lng;
+                addOrMoveMarker(lat, lng);
+                if (window.qt && window.qt.updateCoordinates) {
+                    window.qt.updateCoordinates(lat, lng);
+                }
+            });
+
+            // WebChannel initialization
+            new QWebChannel(qt.webChannelTransport, function(channel) {
+                window.pyObj = channel.objects.pyObj;
+            });
+
+            // Handle map click events to communicate with PyQt5
+            map.on('click', function(e) {
+                var lat = e.latlng.lat;
+                var lng = e.latlng.lng;
+                addOrMoveMarker(lat, lng);
+                if (window.pyObj) {
+                    window.pyObj.updateCoordinates(lat, lng); // Call updateCoordinates in PyQt5
+                }
+            });
+
+            // Set the map view to include the path
+            map.fitBounds(pathLayer.getBounds());
+        }
+    </script>
+</body>
+</html>
