@@ -42,7 +42,22 @@
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+<script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        new QWebChannel(qt.webChannelTransport, function(channel) {
+            window.pyObj = channel.objects.pyObj;
+        });
 
+        map.on('click', function(e) {
+            var lat = e.latlng.lat;
+            var lng = e.latlng.lng;
+            if (window.pyObj) {
+                window.pyObj.updateCoordinates(lat, lng); // Call updateCoordinates in PyQt5
+            }
+        });
+    });
+</script>
     <script>
         let map;
         let marker;
