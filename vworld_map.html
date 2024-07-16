@@ -42,7 +42,7 @@
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
-    <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+    <script src="https://your-username.github.io/your-repository/qwebchannel.js"></script> <!-- 여기에 GitHub Pages에서 호스팅되는 qwebchannel.js의 URL을 추가합니다. -->
 
     <script>
         let map;
@@ -122,58 +122,18 @@
             tile_layer_6006df8ca80530a3dbcc43e0bc58dd68.remove();
             tile_layer_3f5e84e64fe7cda238e74046bc54654c.remove();
 
-            // Function to add or move a marker on the map
-            function addOrMoveMarker(lat, lng) {
-                if (marker) {
-                    marker.setLatLng([lat, lng]);
-                } else {
-                    marker = L.marker([lat, lng], {icon: L.AwesomeMarkers.icon({"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "blue", "prefix": "glyphicon"})}).addTo(map);
-                }
-                map.setView([lat, lng], map.getZoom());
-            }
-
-            map.on('click', function(e) {
-                var lat = e.latlng.lat;
-                var lng = e.latlng.lng;
-                addOrMoveMarker(lat, lng);
-                if (window.qt && window.qt.updateCoordinates) {
-                    window.qt.updateCoordinates(lat, lng);
-                }
-                if (window.pyObj) {
-                    window.pyObj.receiveCoordinates(lat, lng); // Send coordinates back to PyQt5
-                }
-            });
-
-            // WebChannel initialization
+            // Connect to the QWebChannel
             new QWebChannel(qt.webChannelTransport, function(channel) {
-                window.pyObj = channel.objects.pyObj;
+                window.backend = channel.objects.backend;
             });
-
-            // Handle map click events to communicate with PyQt5
-            map.on('click', function(e) {
-                var lat = e.latlng.lat;
-                var lng = e.latlng.lng;
-                addOrMoveMarker(lat, lng);
-                if (window.pyObj) {
-                    window.pyObj.receiveCoordinates(lat, lng); // Send coordinates back to PyQt5
-                }
-            });
-
-            // Set the map view to include the path
-            map.fitBounds(pathLayer.getBounds());
         }
 
-        // Function to update the map point from PyQt5
         function updateMapPoint(lat, lng) {
-            if (!map) {
-                return;
-            }
             if (marker) {
-                marker.setLatLng([lat, lng]);
-            } else {
-                marker = L.marker([lat, lng], {icon: L.AwesomeMarkers.icon({"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "blue", "prefix": "glyphicon"})}).addTo(map);
+                map.removeLayer(marker);
             }
-            map.setView([lat, lng], map.getZoom());
+            marker = L.marker([lat, lng]).addTo(map);
+            map.setView([lat, lng], 13);
         }
     </script>
 </body>
