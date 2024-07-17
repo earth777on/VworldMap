@@ -3,21 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <title>Map with Login</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
     <style>
         html, body {width: 100%; height: 100%; margin: 0; padding: 0;}
         #map {position: absolute; top: 0; bottom: 0; right: 0; left: 0;}
         .leaflet-container {font-size: 1rem;}
     </style>
 </head>
+    <script>
+        L_NO_TOUCH = false;
+        L_DISABLE_3D = false;
+    </script>
+    <script src="https://github.com/earth777on/VworldMap/edit/main/qwebchannel.js"></script><!--py.클라이언트 통신용-->
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <body>
-    <!-- Map Container -->
-    <div id="map"></div>
-
-    <!-- Login Modal -->
+    <div id="map" style="display:none;"></div>
+    <script src="path.js"></script>
     <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -37,127 +48,130 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
-    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+</body>
+<script>
+    let map;
+    let key;
+    let marker;
+    let pathLayer;
 
-    <script>
-        let map;
-        let marker;
-        let pathLayer;
+    function addOrMoveMarker(lat, lng) { }
 
-        $(document).ready(function() {
-            // Show the login modal
-            var loginModal = new bootstrap.Modal(document.getElementById('loginModal'), {
-                backdrop: 'static',
-                keyboard: false
-            });
-            loginModal.show();
+    $(document).ready(function() {
+        // Show the login modal
+        var loginModal = new bootstrap.Modal(document.getElementById('loginModal'), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        loginModal.show();
 
-            // Handle form submission
-            $('#loginForm').on('submit', function(event) {
-                event.preventDefault();
-                var apikey = $('#apikey').val();
-                loginModal.hide();
-                initializeMap(apikey);
-            });
+        // Handle form submission
+        $('#loginForm').on('submit', function(event) {
+            event.preventDefault();
+            key = $('#apikey').val();
+            loginModal.hide();
+            $('#map').show();
+            initializeMap();
+        });
+    });
+
+    function initializeMap() {
+    var map = L.map("map",{
+            center: [37.5830426,127.0585864],
+            crs: L.CRS.EPSG3857,
+            maxzoom: 18,
+            zoomControl: true,
+            preferCanvas: false,
         });
 
-        function initializeMap(key) {
-            map = L.map('map', {
-                center: [37.5830426, 127.0585864],
-                crs: L.CRS.EPSG3857,
-                zoom: 11,
-                zoomControl: true,
-                preferCanvas: false,
-            });
+    var tile_layer_5550952b9891e7da11705edd551d6f68 = L.tileLayer(
+        "https://api.vworld.kr/req/wmts/1.0.0/"+key+"/Satellite/{z}/{y}/{x}.jpeg",
+        {"attribution": "VWorld", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+    ).addTo(map);
 
-            var tile_layer_5550952b9891e7da11705edd551d6f68 = L.tileLayer(
-                "https://api.vworld.kr/req/wmts/1.0.0/" + key + "/Satellite/{z}/{y}/{x}.jpeg",
-                {"attribution": "VWorld", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
-            ).addTo(map);
+    var tile_layer_6006df8ca80530a3dbcc43e0bc58dd68 = L.tileLayer(
+        "https://api.vworld.kr/req/wmts/1.0.0/"+key+"/Hybrid/{z}/{y}/{x}.png",
+        {"attribution": "VWorld", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+    ).addTo(map);
 
-            var tile_layer_6006df8ca80530a3dbcc43e0bc58dd68 = L.tileLayer(
-                "https://api.vworld.kr/req/wmts/1.0.0/" + key + "/Hybrid/{z}/{y}/{x}.png",
-                {"attribution": "VWorld", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
-            );
+    var tile_layer_3f5e84e64fe7cda238e74046bc54654c = L.tileLayer(
+        "https://api.vworld.kr/req/wmts/1.0.0/"+key+"/Base/{z}/{y}/{x}.png",
+        {"attribution": "VWorld", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+    ).addTo(map);
 
-            var tile_layer_3f5e84e64fe7cda238e74046bc54654c = L.tileLayer(
-                "https://api.vworld.kr/req/wmts/1.0.0/" + key + "/Base/{z}/{y}/{x}.png",
-                {"attribution": "VWorld", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
-            );
+    var tile_layer_5d7b7fd7b91179a7ad4705b6053815e6 = L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {"attribution": "Data by \u0026copy; \u003ca target=\"_blank\" href=\"http://openstreetmap.org\"\u003eOpenStreetMap\u003c/a\u003e, under \u003ca target=\"_blank\" href=\"http://www.openstreetmap.org/copyright\"\u003eODbL\u003c/a\u003e.", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+    ).addTo(map);
 
-            var tile_layer_5d7b7fd7b91179a7ad4705b6053815e6 = L.tileLayer(
-                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                {"attribution": "Data by &copy; <a target=\"_blank\" href=\"http://openstreetmap.org\">OpenStreetMap</a>, under <a target=\"_blank\" href=\"http://www.openstreetmap.org/copyright\">ODbL</a>.", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
-            );
+    // path.js에서 불러온 경로 데이터를 폴리라인 레이어로 추가
+    var pathLayer = L.polyline(path, {color: 'blue'});
 
-            pathLayer = L.polyline([
-                [37.5830426, 127.0585864],
-                [37.5820426, 127.0575864]
-            ], {color: 'blue'});
+    var layer_control_07451ef053b36ebfdbb6bc9515c4d6d3 = {
+        base_layers: {
+            "VWorld Satellite": tile_layer_5550952b9891e7da11705edd551d6f68,
+            "VWorld Base": tile_layer_3f5e84e64fe7cda238e74046bc54654c,
+            "openstreetmap": tile_layer_5d7b7fd7b91179a7ad4705b6053815e6,
+        },
+        overlays: {
+            "VWorld Hybrid": tile_layer_6006df8ca80530a3dbcc43e0bc58dd68,
+            "Path": pathLayer
+        },
+    };
 
-            var layer_control_07451ef053b36ebfdbb6bc9515c4d6d3 = {
-                base_layers: {
-                    "VWorld Satellite": tile_layer_5550952b9891e7da11705edd551d6f68,
-                    "VWorld Base": tile_layer_3f5e84e64fe7cda238e74046bc54654c,
-                    "openstreetmap": tile_layer_5d7b7fd7b91179a7ad4705b6053815e6,
-                },
-                overlays: {
-                    "VWorld Hybrid": tile_layer_6006df8ca80530a3dbcc43e0bc58dd68,
-                    "Path": pathLayer
-                },
-            };
-
-            L.control.layers(
-                layer_control_07451ef053b36ebfdbb6bc9515c4d6d3.base_layers,
-                layer_control_07451ef053b36ebfdbb6bc9515c4d6d3.overlays,
-                {"autoZIndex": true, "collapsed": true, "position": "topright"}
-            ).addTo(map);
-
-            tile_layer_5d7b7fd7b91179a7ad4705b6053815e6.remove();
-            tile_layer_6006df8ca80530a3dbcc43e0bc58dd68.remove();
-            tile_layer_3f5e84e64fe7cda238e74046bc54654c.remove();
-
-            // Function to add or move a marker on the map
-            function addOrMoveMarker(lat, lng) {
-                if (marker) {
-                    marker.setLatLng([lat, lng]);
-                } else {
-                    marker = L.marker([lat, lng], {icon: L.AwesomeMarkers.icon({"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "blue", "prefix": "glyphicon"})}).addTo(map);
-                }
-                map.setView([lat, lng], map.getZoom());
-            }
-
-            map.on('click', function(e) {
-                var lat = e.latlng.lat;
-                var lng = e.latlng.lng;
-                addOrMoveMarker(lat, lng);
-                if (window.qt && window.qt.updateCoordinates) {
-                    window.qt.updateCoordinates(lat, lng);
-                }
-            });
-
-            // WebChannel initialization
-            new QWebChannel(qt.webChannelTransport, function(channel) {
-                window.pyObj = channel.objects.pyObj;
-            });
-
-            // Handle map click events to communicate with PyQt5
-            map.on('click', function(e) {
-                var lat = e.latlng.lat;
-                var lng = e.latlng.lng;
-                addOrMoveMarker(lat, lng);
-                if (window.pyObj) {
-                    window.pyObj.updateCoordinates(lat, lng); // Call updateCoordinates in PyQt5
-                }
-            });
-
-            // Set the map view to include the path
-            map.fitBounds(pathLayer.getBounds());
+    L.control.layers(
+        layer_control_07451ef053b36ebfdbb6bc9515c4d6d3.base_layers,
+        layer_control_07451ef053b36ebfdbb6bc9515c4d6d3.overlays,
+        {"autoZIndex": true, "collapsed": true, "position": "topright"}
+    ).addTo(map);
+    tile_layer_5d7b7fd7b91179a7ad4705b6053815e6.remove();
+    tile_layer_6006df8ca80530a3dbcc43e0bc58dd68.remove();
+    tile_layer_3f5e84e64fe7cda238e74046bc54654c.remove();
+    function okOrMoveMarker(lat, lng) {
+        if (marker) {
+            marker.setLatLng([lat, lng]);
+        } else {
+            marker = L.marker([lat, lng], {
+                icon: L.AwesomeMarkers.icon({
+                    "extraClasses": "fa-rotate-0",
+                    "icon": "info-sign",
+                    "iconColor": "white",
+                    "markerColor": "blue",
+                    "prefix": "glyphicon"
+                })
+            }).addTo(map);
         }
-    </script>
-</body>
+        map.setView([lat, lng], map.getZoom());
+    }
+    window.addOrMoveMarker = okOrMoveMarker;
+    map.on('click', function(e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+        okOrMoveMarker(lat, lng);
+        if (window.qt && window.qt.updateCoordinates) {
+            window.qt.updateCoordinates(lat, lng);
+        }
+    });
+
+    // WebChannel 초기화
+    new QWebChannel(qt.webChannelTransport, function(channel) {
+        window.pyObj = channel.objects.pyObj;
+    });
+
+    // 지도 클릭 이벤트 핸들러에서 PyQt5와 통신
+    map.on('click', function(e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+        addOrMoveMarker(lat, lng);
+        if (window.pyObj) {
+            window.pyObj.updateCoordinates(lat, lng); // PyQt5의 updateCoordinates 호출
+        }
+    });
+        // 경로가 모두 보이도록 지도의 범위를 설정
+        map.fitBounds(pathLayer.getBounds());
+    }
+    
+        
+
+</script>
 </html>
