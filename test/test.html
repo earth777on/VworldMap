@@ -42,12 +42,17 @@
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
-    <script src="https://github.com/earth777on/VworldMap/edit/main/qwebchannel.js"></script> <!-- 여기에 GitHub Pages에서 호스팅되는 qwebchannel.js의 URL을 추가합니다. -->
+    <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+    <script src="path.js"></script>
+    <script src="https://github.com/earth777on/VworldMap/edit/main/qwebchannel.js"></script>
 
     <script>
         let map;
         let marker;
         let pathLayer;
+        let pyObj;
+
+        function addOrMoveMarker(lat, lng) { }
 
         $(document).ready(function() {
             // Show the login modal
@@ -65,7 +70,7 @@
                 initializeMap(apikey);
             });
         });
-        function addOrMoveMarker(lat, lng) { }
+
         function initializeMap(key) {
             map = L.map('map', {
                 center: [37.5830426, 127.0585864],
@@ -95,10 +100,7 @@
                 {"attribution": "Data by &copy; <a target=\"_blank\" href=\"http://openstreetmap.org\">OpenStreetMap</a>, under <a target=\"_blank\" href=\"http://www.openstreetmap.org/copyright\">ODbL</a>.", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
             );
 
-            pathLayer = L.polyline([
-                [37.5830426, 127.0585864],
-                [37.5820426, 127.0575864]
-            ], {color: 'blue'});
+            pathLayer = L.polyline(path, {color: 'blue'}); // path.js에서 불러온 경로 데이터를 폴리라인 레이어로 추가
 
             var layer_control_07451ef053b36ebfdbb6bc9515c4d6d3 = {
                 base_layers: {
@@ -122,55 +124,50 @@
             tile_layer_6006df8ca80530a3dbcc43e0bc58dd68.remove();
             tile_layer_3f5e84e64fe7cda238e74046bc54654c.remove();
 
-            // Connect to the QWebChannel
-            new QWebChannel(qt.webChannelTransport, function(channel) {
-                window.backend = channel.objects.backend;
+            // Function to add or move a marker on the map
+            function okOrMoveMarker(lat, lng) {
+                if (marker) {
+                    marker.setLatLng([lat, lng]);
+                } else {
+                    marker = L.marker([lat, lng], {
+                        icon: L.AwesomeMarkers.icon({
+                            "extraClasses": "fa-rotate-0",
+                            "icon": "info-sign",
+                            "iconColor": "white",
+                            "markerColor": "blue",
+                            "prefix": "glyphicon"
+                        })
+                    }).addTo(map);
+                }
+                map.setView([lat, lng], map.getZoom());
+            }
+            window.addOrMoveMarker = okOrMoveMarker;
+            map.on('click', function(e) {
+                var lat = e.latlng.lat;
+                var lng = e.latlng.lng;
+                okOrMoveMarker(lat, lng);
+                if (window.qt && window.qt.updateCoordinates) {
+                    window.qt.updateCoordinates(lat, lng);
+                }
             });
         
-
-        function okOrMoveMarker(lat, lng) {
-            if (marker) {
-                marker.setLatLng([lat, lng]);
-            } else {
-                marker = L.marker([lat, lng], {
-                    icon: L.AwesomeMarkers.icon({
-                        "extraClasses": "fa-rotate-0",
-                        "icon": "info-sign",
-                        "iconColor": "white",
-                        "markerColor": "blue",
-                        "prefix": "glyphicon"
-                    })
-                }).addTo(map);
+            // WebChannel 초기화
+            new QWebChannel(qt.webChannelTransport, function(channel) {
+                window.pyObj = channel.objects.pyObj;
+            });
+        
+            // 지도 클릭 이벤트 핸들러에서 PyQt5와 통신
+            map.on('click', function(e) {
+                var lat = e.latlng.lat;
+                var lng = e.latlng.lng;
+                addOrMoveMarker(lat, lng);
+                if (window.pyObj) {
+                    window.pyObj.updateCoordinates(lat, lng); // PyQt5의 updateCoordinates 호출
+                }
+            });
+                // 경로가 모두 보이도록 지도의 범위를 설정
+                map.fitBounds(pathLayer.getBounds());
             }
-            map.setView([lat, lng], map.getZoom());
-        }
-        window.addOrMoveMarker = okOrMoveMarker;
-        map.on('click', function(e) {
-            var lat = e.latlng.lat;
-            var lng = e.latlng.lng;
-            okOrMoveMarker(lat, lng);
-            if (window.qt && window.qt.updateCoordinates) {
-                window.qt.updateCoordinates(lat, lng);
-            }
-        });
-    
-        // WebChannel 초기화
-        new QWebChannel(qt.webChannelTransport, function(channel) {
-            window.pyObj = channel.objects.pyObj;
-        });
-    
-        // 지도 클릭 이벤트 핸들러에서 PyQt5와 통신
-        map.on('click', function(e) {
-            var lat = e.latlng.lat;
-            var lng = e.latlng.lng;
-            addOrMoveMarker(lat, lng);
-            if (window.pyObj) {
-                window.pyObj.updateCoordinates(lat, lng); // PyQt5의 updateCoordinates 호출
-            }
-        });
-            // 경로가 모두 보이도록 지도의 범위를 설정
-            map.fitBounds(pathLayer.getBounds());
-    }
     </script>
 </body>
 </html>
